@@ -69,7 +69,6 @@ subprojects {
 
     clean {
         delete "${projectDir}/Gemfile"
-        //delete "${projectDir}/" + pluginInfo.pluginFullName() + ".gemspec"
         delete "${projectDir}/lib/"
         delete "${projectDir}/vendor/"
         fileTree(dir: projectDir, includes: ["*.gemspec"]).each { file ->
