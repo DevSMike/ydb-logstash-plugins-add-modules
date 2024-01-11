@@ -1,3 +1,5 @@
+description = "YDB Topics Output plugin"
+
 pluginInfo.pluginType      = "output"
 pluginInfo.pluginClass     = "YdbTopicsOutput"
 pluginInfo.pluginName      = "ydb_topics_output"
