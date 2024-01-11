@@ -1,7 +1,4 @@
 rootProject.name = 'ydb-logstash-plugins'
 
 include ':ydb_input_plugin'
-project(':ydb_input_plugin').projectDir = new File(rootProject.projectDir, 'ydb_input_plugin')
-
 include ':ydb_output_plugin'
-project(':ydb_output_plugin').projectDir = new File(rootProject.projectDir, 'ydb_output_plugin')

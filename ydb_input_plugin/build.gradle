@@ -1,3 +1,5 @@
+description = "YDB Topics Input plugin"
+
 pluginInfo.pluginType  = "input"
 pluginInfo.pluginClass = "YdbTopicsInput"
 pluginInfo.pluginName  = "ydb_topics_input"
