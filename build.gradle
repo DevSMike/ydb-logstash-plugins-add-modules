@@ -82,7 +82,7 @@ subprojects {
 
     //add gradlew files
     task wrapper(type: Wrapper) {
-        gradleVersion = '2.4'
+        gradleVersion = '7.4.2'
     }
 
     // delete gradlew files
