@@ -80,31 +80,6 @@ subprojects {
     }
     //after clean if get problems: TASKKILL /F /IM java.exe
 
-    //add gradlew files
-    task wrapper(type: Wrapper) {
-        gradleVersion = '7.4.2'
-    }
-
-    // delete gradlew files
-    task cleanGradlewFiles {
-        doLast {
-            def deleteFiles = { dir ->
-                fileTree(dir: dir, includes: ['gradlew', 'gradlew.bat']).each { file ->
-                    file.delete()
-                }
-            }
-
-            // Удаление файлов в корне проекта
-            deleteFiles(project.rootDir)
-
-            // Удаление файлов в модуле ydb_input_plugin
-            deleteFiles(project(':ydb_input_plugin').projectDir)
-
-            // Удаление файлов в модуле ydb_output_plugin
-            deleteFiles(project(':ydb_output_plugin').projectDir)
-        }
-    }
-
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
