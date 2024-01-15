@@ -30,6 +30,9 @@ jobs:
           echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
           echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
 
+      - name: Copy logstash-core jars
+        run: cp -R logstash/logstash-core/lib/* ydb_input_plugin/libs/
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
