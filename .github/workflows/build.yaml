@@ -3,7 +3,11 @@ name: Build and Release Gems
 on:
   push:
     branches:
-      - main
+      - master
+      - develop
+      - release*
+  pull_request:
+    type: [opened, reopened, edited]
 
 jobs:
   build:
