@@ -54,13 +54,8 @@ jobs:
     needs: build
 
     steps:
-      - name: List gem files in ydb_input_plugin
-        run: |
-          ls -l ydb_input_plugin/*.gem
-
-      - name: List gem files in ydb_output_plugin
-        run: |
-          ls -l ydb_output_plugin/*.gem
+      - name: List contents of ydb_input_plugin directory
+        run: ls -lR ydb_input_plugin
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
