@@ -22,6 +22,14 @@ jobs:
         with:
           ruby-version: 3.0.0
 
+      - name: Clone Logstash repository
+        run: git clone https://github.com/elastic/logstash
+
+      - name: Set LOGSTASH_CORE_PATH
+        run: |
+          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
+          cat gradle.properties
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
