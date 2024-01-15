@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release artifacts from ydb_input_plugin
-        if: success() && exists('ydb_input_plugin/*.gem')
+        if: success() && test -e ydb_input_plugin/*.gem
         run: |
           curl -X POST \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -75,11 +75,10 @@ jobs:
           "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
 
       - name: Upload release artifacts from ydb_output_plugin
-        if: success() && exists('ydb_output_plugin/*.gem')
+        if: success() && test -e ydb_output_plugin/*.gem
         run: |
           curl -X POST \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -H "Content-Type: $(file -b --mime-type ydb_output_plugin/*.gem)" \
           --data-binary @ydb_output_plugin/*.gem \
           "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
-
