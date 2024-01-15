@@ -41,12 +41,12 @@ jobs:
       - name: Build Gems in ydb_input_plugin
         run: |
           cd ydb_input_plugin
-          ../gradlew gem
+          ../gradlew gem -PlogstashCorePath=${{ needs.build.outputs.LOGSTASH_CORE_PATH }}
 
       - name: Build Gems in ydb_output_plugin
         run: |
           cd ydb_output_plugin
-          ../gradlew gem
+          ../gradlew gem -PlogstashCorePath=${{ needs.build.outputs.LOGSTASH_CORE_PATH }}
 
   release:
     runs-on: ubuntu-latest
