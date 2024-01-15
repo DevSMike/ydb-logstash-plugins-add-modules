@@ -82,3 +82,4 @@ jobs:
           -H "Content-Type: $(file -b --mime-type ydb_output_plugin/*.gem)" \
           --data-binary @ydb_output_plugin/*.gem \
           "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
+
