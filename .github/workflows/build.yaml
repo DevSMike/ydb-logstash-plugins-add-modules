@@ -13,10 +13,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    outputs:
-      id: LOGSTASH_CORE_PATH
-      value: ${{ steps.set_logstash_core.outputs.LOGSTASH_CORE_PATH }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -30,10 +26,9 @@ jobs:
         run: git clone https://github.com/elastic/logstash
 
       - name: Set LOGSTASH_CORE_PATH
-        id: set_logstash_core
         run: |
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core"
+          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
+          cat gradle.properties
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -41,12 +36,12 @@ jobs:
       - name: Build Gems in ydb_input_plugin
         run: |
           cd ydb_input_plugin
-          ../gradlew gem -PlogstashCorePath=${{ needs.build.outputs.LOGSTASH_CORE_PATH }}
+          ../gradlew gem
 
       - name: Build Gems in ydb_output_plugin
         run: |
           cd ydb_output_plugin
-          ../gradlew gem -PlogstashCorePath=${{ needs.build.outputs.LOGSTASH_CORE_PATH }}
+          ../gradlew gem
 
   release:
     runs-on: ubuntu-latest
@@ -65,3 +60,4 @@ jobs:
         with:
           file: ydb_output_plugin/*.gem
           asset_name: Gem Files
+
