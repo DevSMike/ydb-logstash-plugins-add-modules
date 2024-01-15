@@ -66,19 +66,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release artifacts from ydb_input_plugin
-        id: upload_input_plugin
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ydb_input_plugin/*.gem
-          asset_name: Gem Files
-          asset_content_type: application/octet-stream
+        run: |
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: $(file -b --mime-type ydb_input_plugin/*.gem)" \
+          --data-binary @ydb_input_plugin/*.gem \
+          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
 
       - name: Upload release artifacts from ydb_output_plugin
-        id: upload_output_plugin
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ydb_output_plugin/*.gem
-          asset_name: Gem Files
-          asset_content_type: application/octet-stream
+        run: |
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: $(file -b --mime-type ydb_output_plugin/*.gem)" \
+          --data-binary @ydb_output_plugin/*.gem \
+          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
