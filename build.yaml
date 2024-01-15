@@ -1,0 +1,52 @@
+name: Build and Release Gems
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Ruby
+        uses: actions/setup-ruby@v2
+        with:
+          ruby-version: 2.7
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Build Gems in ydb_input_plugin
+        run: |
+          cd ydb_input_plugin
+          ../gradlew gem
+
+      - name: Build Gems in ydb_output_plugin
+        run: |
+          cd ydb_output_plugin
+          ../gradlew gem
+
+  release:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - name: Upload release artifacts from ydb_input_plugin
+        uses: actions/upload-release-asset@v2
+        with:
+          file: ydb_input_plugin/*.gem
+          asset_name: Gem Files
+
+      - name: Upload release artifacts from ydb_output_plugin
+        uses: actions/upload-release-asset@v2
+        with:
+          file: ydb_output_plugin/*.gem
+          asset_name: Gem Files
