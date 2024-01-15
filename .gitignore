@@ -16,5 +16,5 @@ out/
 *.gem
 *.gemspec
 Gemfile*
-#gradle.properties
+gradle.properties
 VERSION
