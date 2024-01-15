@@ -35,7 +35,6 @@ jobs:
           cd logstash
           ./gradlew assemble
 
-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -55,14 +54,40 @@ jobs:
     needs: build
 
     steps:
-      - name: Upload release artifacts from ydb_input_plugin
-        uses: actions/upload-release-asset@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          file: ydb_input_plugin/*.gem
+          ruby-version: 3.0.0
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release artifacts from ydb_input_plugin
+        id: upload_input_plugin
+        uses: actions/upload-release-asset@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ydb_input_plugin/*.gem
           asset_name: Gem Files
+          asset_content_type: application/octet-stream
 
       - name: Upload release artifacts from ydb_output_plugin
-        uses: actions/upload-release-asset@v2
+        id: upload_output_plugin
+        uses: actions/upload-release-asset@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: ydb_output_plugin/*.gem
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ydb_output_plugin/*.gem
           asset_name: Gem Files
+          asset_content_type: application/octet-stream
