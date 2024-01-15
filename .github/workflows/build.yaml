@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           gem install bundler
-          bundle install
+          bundle install\
 
       - name: Build Gems in ydb_input_plugin
         run: |
