@@ -54,6 +54,14 @@ jobs:
     needs: build
 
     steps:
+      - name: List gem files in ydb_input_plugin
+        run: |
+          ls -l ydb_input_plugin/*.gem
+
+      - name: List gem files in ydb_output_plugin
+        run: |
+          ls -l ydb_output_plugin/*.gem
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -67,7 +75,7 @@ jobs:
 
       - name: Upload release artifacts from ydb_input_plugin
         run: |
-          for file in ydb_input_plugin/*.gem; do
+          find ydb_input_plugin -name '*.gem' -print0 | while IFS= read -r -d '' file; do
             curl -X POST \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: $(file -b --mime-type "$file")" \
@@ -77,11 +85,12 @@ jobs:
 
       - name: Upload release artifacts from ydb_output_plugin
         run: |
-          for file in ydb_output_plugin/*.gem; do
+          find ydb_output_plugin -name '*.gem' -print0 | while IFS= read -r -d '' file; do
             curl -X POST \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: $(file -b --mime-type "$file")" \
               --data-binary @"$file" \
               "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
           done
+      
       
