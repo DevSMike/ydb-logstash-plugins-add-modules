@@ -27,8 +27,8 @@ jobs:
 
       - name: Set LOGSTASH_CORE_PATH
         run: |
+          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
           echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
-          cat gradle.properties
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -60,4 +60,3 @@ jobs:
         with:
           file: ydb_output_plugin/*.gem
           asset_name: Gem Files
-
