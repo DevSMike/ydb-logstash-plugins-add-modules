@@ -22,6 +22,9 @@ jobs:
         with:
           ruby-version: 3.0.0
 
+      - name: Make gradlew executable
+        run: chmod +x ../gradlew
+
       - name: Build Gems in ydb_input_plugin
         run: |
           cd ydb_input_plugin
