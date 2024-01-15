@@ -1,30 +1,26 @@
+package org.logstashplugins;
+
 import co.elastic.logstash.api.Configuration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
 import org.logstash.plugins.ConfigurationImpl;
 import org.logstashplugins.YdbTopicsInput;
-import tech.ydb.table.SessionRetryContext;
-import tech.ydb.table.impl.SimpleTableClient;
-import tech.ydb.table.rpc.grpc.GrpcTableRpc;
-import tech.ydb.test.junit4.GrpcTransportRule;
 import org.mockito.MockitoAnnotations;
 import tech.ydb.test.junit5.YdbHelperExtension;
 
 import java.util.*;
 import java.util.function.Consumer;
 
-import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Assertions;
+
 
 public class YdbTopicsInputTest {
 
-    private YdbTopicsInput input;
-
-   @RegisterExtension
-    public static final YdbHelperExtension ydb = new YdbHelperExtension();
+    @RegisterExtension
+    private static final YdbHelperExtension ydb = new YdbHelperExtension();
 
 //    @ClassRule
 //   public final static GrpcTransportRule ydbTransport = new GrpcTransportRule();
@@ -39,22 +35,23 @@ public class YdbTopicsInputTest {
 //
 //    private final String tablePath = ydbTransport.getDatabase() + "/" + TABLE_NAME;
 
+    private YdbTopicsInput input;
 
     private static String connectionString() {
-        System.out.println(ydb.endpoint());
+
         StringBuilder jdbc = new StringBuilder()
                 .append(ydb.useTls() ? "grpcs://" : "grpc://")
                 .append(ydb.endpoint())
                 .append(ydb.database());
 
-        if (ydb.authToken() != null) {
-            jdbc.append("?").append("token=").append(ydb.authToken());
-        }
+//        if (ydb.authToken() != null) {
+//            jdbc.append("?").append("token=").append(ydb.authToken());
+//        }
 
         return jdbc.toString();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         String connectionString = connectionString();
@@ -71,7 +68,7 @@ public class YdbTopicsInputTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         input.stop();
     }
@@ -86,12 +83,12 @@ public class YdbTopicsInputTest {
             }
         };
 
-        assertFalse(input.getIsStopped());
+        Assertions.assertFalse(input.getIsStopped());
 
         input.start(consumer);
         input.stop();
 
-        assertTrue(input.getIsStopped());
+        Assertions.assertTrue(input.getIsStopped());
     }
 
 }
