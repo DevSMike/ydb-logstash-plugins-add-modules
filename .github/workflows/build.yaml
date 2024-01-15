@@ -13,6 +13,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      id: LOGSTASH_CORE_PATH
+      value: ${{ steps.set_logstash_core.outputs.LOGSTASH_CORE_PATH }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -26,9 +30,10 @@ jobs:
         run: git clone https://github.com/elastic/logstash
 
       - name: Set LOGSTASH_CORE_PATH
+        id: set_logstash_core
         run: |
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
-          cat gradle.properties
+          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
+          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core"
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
