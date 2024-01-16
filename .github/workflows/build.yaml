@@ -48,13 +48,6 @@ jobs:
           cd ydb_output_plugin
           ../gradlew gem
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          sudo apt-add-repository https://cli.github.com/packages
-          sudo apt-get update
-          sudo apt-get install gh
-
       - name: Set up Ruby for Release
         uses: ruby/setup-ruby@v1
         with:
