@@ -19,6 +19,12 @@ jobs:
         with:
           ruby-version: 3.0.0
 
+      - name: Check project structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Contents of the directory: $(ls -la)"
+      
+
       - name: Create Logstash directory
         run: mkdir logstash
 
