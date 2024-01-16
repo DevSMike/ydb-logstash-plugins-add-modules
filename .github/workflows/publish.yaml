@@ -1,16 +1,12 @@
-name: Build and Test Gems
+name: Publish Gems
 
 on:
   push:
-    branches:
-      - master
-      - develop
-      - release*
-  pull_request:
-    type: [opened, reopened, edited]
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  build_and_test:
+  publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +40,18 @@ jobs:
         run: |
           cd ydb_output_plugin
           ../gradlew gem
+          
+           - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Ruby for Release
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.0
+
+      - name: Create GitHub Release
+        run: |
+          version=$(cat ydb_input_plugin/VERSION)  
+          gh release create "v${version}" -t "Release v${version}" ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
