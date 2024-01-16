@@ -43,13 +43,15 @@ jobs:
             ./gradlew assemble
             cd ..
 
-            cd ydb_input_plugin
-            ../gradlew clean
-            ../gradlew gem
+            # Добавление команд для тестирования конкретной версии
+            cd "logstash/$logstash_dir/ydb_input_plugin"
+            ../../gradlew clean
+            ../../gradlew gem
             cd ..
 
-            cd ydb_output_plugin
-            ../gradlew clean
-            ../gradlew gem
+            cd "logstash/$logstash_dir/ydb_output_plugin"
+            ../../gradlew clean
+            ../../gradlew gem
             cd ..
           done
+      
