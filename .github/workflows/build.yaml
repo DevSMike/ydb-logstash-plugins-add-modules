@@ -35,15 +35,9 @@ jobs:
           cd logstash
           ./gradlew assemble
 
-      - name: Build Gems in ydb_input_plugin
+      - name: Build Gems Files
         run: |
-          cd ydb_input_plugin
-          sh -c '../gradlew gem'
-
-      - name: Build Gems in ydb_output_plugin
-        run: |
-          cd ydb_output_plugin
-          ../gradlew gem
+          ./gradlew gem
 
       - name: Set up Ruby for Release
         uses: ruby/setup-ruby@v1
