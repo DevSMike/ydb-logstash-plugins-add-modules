@@ -40,36 +40,27 @@ jobs:
           for version in "${versions[@]}"; do
             # Очистка директории перед каждой итерацией
             rm -rf "logstash/$version"
-          
+
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
             tar -xzf "logstash/$version.tar.gz" --directory "logstash"
             logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
-
-            # Перейти в корневую директорию проекта
-            cd "${{ github.workspace }}"
-
-            # Задать путь к logstash
             echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
             cd "logstash/$logstash_dir"
-
-            # Сборка logstash
             ./gradlew clean
             ./gradlew assemble
-          
-          
-            # Перейти в корневую директорию проекта
-            cd "${{ github.workspace }}"
-          
+            cd ..
+
             # Добавление команд для тестирования конкретной версии
             cd "ydb_input_plugin"
-            ../gradlew clean
-            ../gradlew gem
+            ../../gradlew clean
+            ../../gradlew gem
             cd ..
 
             cd "ydb_output_plugin"
-            ../gradlew clean
-            ../gradlew gem
+            ../../gradlew clean
+            ../../gradlew gem
             cd ..
           done
+      
