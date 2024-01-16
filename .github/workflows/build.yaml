@@ -57,6 +57,7 @@ jobs:
             ./gradlew clean
             ./gradlew assemble
             # Возвращаемся на две директории наверх
+          echo "Current directory after gradlew: $(pwd)"
             cd ../..
 
             # Используйте абсолютные пути к плагинам
