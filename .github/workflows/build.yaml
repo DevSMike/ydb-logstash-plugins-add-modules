@@ -57,8 +57,14 @@ jobs:
             ./gradlew clean
             ./gradlew assemble
             # Возвращаемся на две директории наверх
-         
-            cd ../..
+           cd..
+          echo "Current directory after gradlew: $(pwd)"
+            echo "Contents of the directory: $(ls -la)"
+            cd ..
+            echo "Current directory after gradlew: $(pwd)"
+            echo "Contents of the directory: $(ls -la)"
+          
+            cd ..
             echo "Current directory after gradlew: $(pwd)"
             echo "Contents of the directory: $(ls -la)"
           
