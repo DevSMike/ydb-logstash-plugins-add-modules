@@ -7,7 +7,7 @@ on:
       - develop
       - release*
   pull_request:
-    type: [opened, reopened, edited]
+    types: [opened, reopened, edited]
 
 jobs:
   build:
@@ -62,20 +62,17 @@ jobs:
 
       - name: Upload release artifacts from ydb_input_plugin
         run: |
-          find ydb_input_plugin -name '*.gem' -print0 | while IFS= read -r -d '' file; do
-            curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type "$file")" \
-              --data-binary @"$file" \
-              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
-          done
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: $(file -b --mime-type ydb_input_plugin/*.gem)" \
+          --data-binary @ydb_input_plugin/*.gem \
+          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
 
       - name: Upload release artifacts from ydb_output_plugin
         run: |
-          find ydb_output_plugin -name '*.gem' -print0 | while IFS= read -r -d '' file; do
-            curl -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type "$file")" \
-              --data-binary @"$file" \
-              "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
-          done
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: $(file -b --mime-type ydb_output_plugin/*.gem)" \
+          --data-binary @ydb_output_plugin/*.gem \
+          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
+      
