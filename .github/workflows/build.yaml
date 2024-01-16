@@ -51,8 +51,11 @@ jobs:
             # Сборка logstash
             ./gradlew clean
             ./gradlew assemble
-            cd ..
-
+          
+          
+            # Перейти в корневую директорию проекта
+            cd "${{ github.workspace }}"
+          
             # Добавление команд для тестирования конкретной версии
             cd "ydb_input_plugin"
             ../gradlew clean
