@@ -48,30 +48,20 @@ jobs:
           cd ydb_output_plugin
           ../gradlew gem
 
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+          sudo apt-add-repository https://cli.github.com/packages
+          sudo apt-get update
+          sudo apt-get install gh
+
       - name: Set up Ruby for Release
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.0.0
 
-      - name: Create Release
-        id: create_release
-        run: echo "v${{ github.event.after }}" > release_version.txt
+      - name: Create GitHub Release
+        run: |
+          gh release create v${{ github.event.after }} -t "Release v${{ github.event.after }}" -F release_version.txt ydb_input_plugin/*.gem ydb_output_plugin/*.gem
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload release artifacts from ydb_input_plugin
-        run: |
-          curl -X POST \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Content-Type: $(file -b --mime-type ydb_input_plugin/*.gem)" \
-          --data-binary @ydb_input_plugin/*.gem \
-          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
-
-      - name: Upload release artifacts from ydb_output_plugin
-        run: |
-          curl -X POST \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Content-Type: $(file -b --mime-type ydb_output_plugin/*.gem)" \
-          --data-binary @ydb_output_plugin/*.gem \
-          "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
-      
