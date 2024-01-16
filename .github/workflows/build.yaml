@@ -52,15 +52,16 @@ jobs:
             ./gradlew assemble
             cd ..
 
-            # Добавление команд для тестирования конкретной версии
-            cd "ydb_input_plugin"
+            # Используйте абсолютные пути к плагинам
+            cd "$(pwd)/ydb_input_plugin"
             ../../gradlew clean
             ../../gradlew gem
             cd ..
 
-            cd "ydb_output_plugin"
+            cd "$(pwd)/ydb_output_plugin"
             ../../gradlew clean
             ../../gradlew gem
             cd ..
           done
+      
       
