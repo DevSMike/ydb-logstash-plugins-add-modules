@@ -44,24 +44,30 @@ jobs:
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
             tar -xzf "logstash/$version.tar.gz" --directory "logstash"
             logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+            logstash_abs_path="$(pwd)/logstash/$logstash_dir"
+
+            # Выводим путь в середине скрипта
+            echo "LOGSTASH_ABS_PATH=$logstash_abs_path"
+
+            echo "LOGSTASH_CORE_PATH=$logstash_abs_path/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
-            cd "logstash/$logstash_dir"
+            cd "$logstash_abs_path"
             ./gradlew clean
             ./gradlew assemble
             cd ..
 
             # Используйте абсолютные пути к плагинам
-            cd "$(pwd)/ydb_input_plugin"
+            cd "$(pwd)/ydb-logstash-plugins-add-modules/ydb_input_plugin"
             ../../gradlew clean
             ../../gradlew gem
             cd ..
 
-            cd "$(pwd)/ydb_output_plugin"
+            cd "$(pwd)/ydb-logstash-plugins-add-modules/ydb_output_plugin"
             ../../gradlew clean
             ../../gradlew gem
             cd ..
           done
+      
       
       
