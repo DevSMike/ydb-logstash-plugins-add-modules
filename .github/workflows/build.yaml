@@ -14,33 +14,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.0.0
 
-      - name: Clone Logstash repository
-        run: git clone https://github.com/elastic/logstash
-
-      - name: Set LOGSTASH_CORE_PATH
+      - name: Get latest Logstash versions
+        id: version
         run: |
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
+          echo "::set-output name=versions::${versions[@]}"
 
-      - name: Generate logstash-core.jar
+      - name: Set LOGSTASH_CORE_PATH and Run Tests for all versions
         run: |
-          cd logstash
-          ./gradlew assemble
+          versions=($(echo "${{ steps.version.outputs.versions }}" | tr -d '[:space:]'))
+          for version in "${versions[@]}"; do
+            wget https://github.com/elastic/logstash/archive/$version.tar.gz
+            tar -xzf $version.tar.gz
+            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-$version/logstash-core" > gradle.properties
+            echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
+            cd logstash-$version
+            ./gradlew clean
+            ./gradlew assemble
+            cd ..
 
-      - name: Build Gems in ydb_input_plugin
-        run: |
-          cd ydb_input_plugin
-          ../gradlew gem
+            # Add test commands for the specific version
+            cd ydb_input_plugin
+            ../gradlew clean
+            ../gradlew gem
+            cd ..
 
-      - name: Build Gems in ydb_output_plugin
-        run: |
-          cd ydb_output_plugin
-          ../gradlew gem
+            cd ydb_output_plugin
+            ../gradlew clean
+            ../gradlew gem
+            cd ..
+          done
