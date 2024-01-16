@@ -37,7 +37,12 @@ jobs:
 
       - name: Build Gems Files
         run: |
-          ./gradlew gem
+          bash -c 'cd ydb_input_plugin && ../gradlew gem'
+
+      - name: Build Gems in ydb_output_plugin
+        run: |
+          cd ydb_output_plugin
+          ../gradlew gem
 
       - name: Set up Ruby for Release
         uses: ruby/setup-ruby@v1
