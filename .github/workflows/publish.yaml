@@ -41,7 +41,7 @@ jobs:
           cd ydb_output_plugin
           ../gradlew gem
           
-           - name: Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Ruby for Release
