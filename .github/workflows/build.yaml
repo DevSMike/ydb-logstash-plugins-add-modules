@@ -38,22 +38,29 @@ jobs:
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
             tar -xzf "logstash/$version.tar.gz" --directory "logstash"
             logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+
+            # Перейти в корневой проект
+            cd "ydb-logstash-plugins"
+
+            # Задать путь к logstash
+            echo "LOGSTASH_CORE_PATH=$(pwd)/../logstash/$logstash_dir/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
-            cd "logstash/$logstash_dir"
+            cd "../logstash/$logstash_dir"
+
+            # Сборка logstash
             ./gradlew clean
             ./gradlew assemble
             cd ..
 
             # Добавление команд для тестирования конкретной версии
-            cd "logstash/$logstash_dir/ydb_input_plugin"
+            cd "ydb_input_plugin"
             ../../gradlew clean
             ../../gradlew gem
             cd ..
 
-            cd "logstash/$logstash_dir/ydb_output_plugin"
+            cd "ydb_output_plugin"
             ../../gradlew clean
             ../../gradlew gem
-            cd ..
+            cd ../..
           done
