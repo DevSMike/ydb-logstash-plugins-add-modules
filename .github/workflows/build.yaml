@@ -32,6 +32,9 @@ jobs:
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
+            # Очистка директории перед каждой итерацией
+            rm -rf "logstash/$version"
+          
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
             tar -xzf "logstash/$version.tar.gz" --directory "logstash"
             logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
@@ -54,4 +57,3 @@ jobs:
             ../../gradlew gem
             cd ..
           done
-      
