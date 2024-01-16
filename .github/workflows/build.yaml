@@ -54,9 +54,6 @@ jobs:
     needs: build
 
     steps:
-      - name: List contents of ydb_input_plugin directory
-        run: ls -lR ydb_input_plugin
-
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -67,6 +64,24 @@ jobs:
         run: echo "v${{ github.event.after }}" > release_version.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Change to ydb_input_plugin directory
+        run: cd ydb_input_plugin
+
+      - name: List contents of ydb_input_plugin directory
+        run: ls -lR
+
+      - name: Change back to the root directory
+        run: cd ..
+
+      - name: Change to ydb_output_plugin directory
+        run: cd ydb_output_plugin
+
+      - name: List contents of ydb_output_plugin directory
+        run: ls -lR
+
+      - name: Change back to the root directory
+        run: cd ..
 
       - name: Upload release artifacts from ydb_input_plugin
         run: |
@@ -87,5 +102,5 @@ jobs:
               --data-binary @"$file" \
               "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=Gem Files"
           done
-      
+  
       
