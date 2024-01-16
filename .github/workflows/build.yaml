@@ -36,7 +36,7 @@ jobs:
           ./gradlew assemble
 
       - name: Build Gems in ydb_input_plugin
-        run: |
+        script: |
           cd ydb_input_plugin
           ../gradlew gem
 
