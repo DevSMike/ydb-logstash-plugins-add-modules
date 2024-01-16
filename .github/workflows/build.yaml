@@ -19,26 +19,30 @@ jobs:
         with:
           ruby-version: 3.0.0
 
+      - name: Create Logstash directory
+        run: mkdir logstash
+
       - name: Get latest Logstash versions
         id: version
         run: |
           versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
           echo "::set-output name=versions::${versions[@]}"
 
-      - name: Set LOGSTASH_CORE_PATH and Run Tests for all versions
+      - name: Download and Extract Logstash versions
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
-            wget "https://github.com/elastic/logstash/archive/$version.tar.gz"
-            tar -xzf "$version.tar.gz"
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-$version/logstash-core" > gradle.properties
+            wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
+            tar -xzf "logstash/$version.tar.gz" --directory "logstash"
+
+            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-$version/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
-            cd "logstash-$version"
+
+            cd "logstash/logstash-$version"
             ./gradlew clean
             ./gradlew assemble
             cd ..
 
-            # Add test commands for the specific version
             cd ydb_input_plugin
             ../gradlew clean
             ../gradlew gem
