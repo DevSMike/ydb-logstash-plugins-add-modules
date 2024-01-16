@@ -35,9 +35,6 @@ jobs:
           cd logstash
           ./gradlew assemble
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
       - name: Build Gems in ydb_input_plugin
         run: |
           cd ydb_input_plugin
