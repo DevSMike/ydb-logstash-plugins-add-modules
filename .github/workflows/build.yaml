@@ -53,11 +53,10 @@ jobs:
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
             cd "$logstash_abs_path"
-
             ./gradlew clean
             ./gradlew assemble
             # Возвращаемся на две директории наверх
-           cd..
+           cd ..
           echo "Current directory after gradlew: $(pwd)"
             echo "Contents of the directory: $(ls -la)"
             cd ..
