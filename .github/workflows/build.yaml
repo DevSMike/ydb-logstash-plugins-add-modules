@@ -52,9 +52,14 @@ jobs:
             echo "LOGSTASH_CORE_PATH=$logstash_abs_path/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
-            cd "$logstash_abs_path"
+              # Вывод текущей директории
+            echo "Current directory: $(pwd)"
+          
             ./gradlew clean
             ./gradlew assemble
+
+            # После выполнения команд выводим текущую директорию снова
+            echo "Current directory after gradlew: $(pwd)"
             cd ..
 
             # Используйте абсолютные пути к плагинам
