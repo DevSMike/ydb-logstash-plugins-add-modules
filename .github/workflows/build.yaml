@@ -38,7 +38,7 @@ jobs:
       - name: Build Gems in ydb_input_plugin
         run: |
           cd ydb_input_plugin
-          sh -c './gradlew gem'
+          sh -c '../gradlew gem'
 
       - name: Build Gems in ydb_output_plugin
         run: |
