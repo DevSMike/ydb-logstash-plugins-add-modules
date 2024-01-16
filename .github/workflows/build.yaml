@@ -53,23 +53,19 @@ jobs:
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
             cd "$logstash_abs_path"
-           echo "Current directory after gradlew: $(pwd)"
+
             ./gradlew clean
             ./gradlew assemble
-           echo "Current directory after gradlew: $(pwd)"
-          
-            cd ..
+            # Возвращаемся на две директории наверх
+            cd ../..
 
             # Используйте абсолютные пути к плагинам
-            cd "$(pwd)/ydb-logstash-plugins-add-modules/ydb_input_plugin"
-            ../../gradlew clean
-            ../../gradlew gem
-            cd ..
-
-            cd "$(pwd)/ydb-logstash-plugins-add-modules/ydb_output_plugin"
-            ../../gradlew clean
-            ../../gradlew gem
-            cd ..
+          cd ydb_input_plugin
+          ../gradlew clean
+          ../gradlew gem
+        
+            cd ydb_output_plugin
+          ../gradlew gem
           done
       
       
