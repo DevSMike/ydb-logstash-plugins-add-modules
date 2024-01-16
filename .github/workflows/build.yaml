@@ -27,13 +27,13 @@ jobs:
 
       - name: Set LOGSTASH_CORE_PATH and Run Tests for all versions
         run: |
-          versions=($(echo "${{ steps.version.outputs.versions }}" | tr -d '[:space:]'))
+          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
-            wget https://github.com/elastic/logstash/archive/$version.tar.gz
-            tar -xzf $version.tar.gz
+            wget "https://github.com/elastic/logstash/archive/$version.tar.gz"
+            tar -xzf "$version.tar.gz"
             echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-$version/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
-            cd logstash-$version
+            cd "logstash-$version"
             ./gradlew clean
             ./gradlew assemble
             cd ..
