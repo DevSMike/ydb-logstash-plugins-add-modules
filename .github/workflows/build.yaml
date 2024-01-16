@@ -35,9 +35,10 @@ jobs:
           cd logstash
           ./gradlew assemble
 
-      - name: Build Gems Files
+      - name: Build Gems in ydb_input_plugin
         run: |
-          bash -c 'cd ydb_input_plugin && ../gradlew gem'
+          cd ydb_input_plugin
+          ../gradlew gem
 
       - name: Build Gems in ydb_output_plugin
         run: |
