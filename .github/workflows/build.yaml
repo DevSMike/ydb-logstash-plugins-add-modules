@@ -61,13 +61,17 @@ jobs:
             cd ../..
             echo "Current directory after gradlew: $(pwd)"
           
-           
-          cd ydb_input_plugin
-          ../gradlew clean
-          ../gradlew gem
+           # Используйте абсолютные пути к плагинам
+          cd "./ydb_input_plugin"
+          ../../gradlew clean
+          ../../gradlew gem
+          cd ..
+          
+          cd "./ydb_output_plugin"
+          ../../gradlew clean
+          ../../gradlew gem
+          cd ..
         
-            cd ydb_output_plugin
-          ../gradlew gem
           done
       
       
