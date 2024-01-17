@@ -7,7 +7,7 @@ on:
       - develop
       - release*
   pull_request:
-    types: [opened, reopened, edited]
+    type: [opened, reopened, edited]
 
 jobs:
   build_and_test:
