@@ -36,15 +36,21 @@ jobs:
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
 
-          for major_version in $(printf "%s\n" "${versions[@]}" | cut -d. -f1 | sort -ru); do
-            versions_for_major=($(printf "%s\n" "${versions[@]}" | grep "^$major_version\." | sort -rV))
+          # Находим первую цифру последней версии
+          first_digit=$(echo "${versions[0]}" | grep -oE '[0-9]+' | head -c 1)
 
-            latest_version="${versions_for_major[0]}"
-            previous_version=$(printf "%s\n" "${versions_for_major[@]}" | grep -A 1 "$latest_version" | tail -n 1)
+          # Находим последний релиз с этой цифрой
+          latest_version=$(printf "%s\n" "${versions[@]}" | grep "^v$first_digit\." | sort -rV | head -n 1)
 
-            echo "Building for Logstash versions: $latest_version and $previous_version"
+          # Находим первую цифру предшествующей версии
+          previous_first_digit=$((first_digit - 1))
 
-            for version in "$latest_version" "$previous_version"; do
+          # Находим последний релиз с предшествующей цифрой
+          previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
+
+          echo "Building for Logstash versions: $latest_version and $previous_version"
+
+          for version in "$latest_version" "$previous_version"; do
               rm -rf "logstash/$version"
 
               wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
@@ -67,5 +73,4 @@ jobs:
               cd ydb_output_plugin
               ../gradlew gem
               cd ..
-            done
           done
