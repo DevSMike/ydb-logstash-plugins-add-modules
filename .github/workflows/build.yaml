@@ -23,15 +23,6 @@ jobs:
         with:
           ruby-version: 3.0.0
 
-      - name: Check project structure
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Contents of the directory: $(ls -la)"
-          cd ydb_input_plugin
-          echo "Current directory: $(pwd)"
-          cd ..
-          
-
       - name: Create Logstash directory
         run: mkdir logstash
 
@@ -59,7 +50,8 @@ jobs:
             cd logstash/$logstash_dir
             ./gradlew clean
             ./gradlew assemble
-            cd ..
+            cd ../..
+           echo "Current directory: $(pwd)"
 
             # Добавление команд для тестирования конкретной версии
             cd ydb_input_plugin
