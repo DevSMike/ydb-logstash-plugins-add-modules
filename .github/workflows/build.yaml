@@ -26,15 +26,29 @@ jobs:
       - name: Create Logstash directory
         run: mkdir logstash
 
-      - name: Get latest Logstash versions
-        id: version
+      - name: Get latest Logstash version
+        id: latest_version
         run: |
-          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
-          echo "::set-output name=versions::${versions[@]}"
+          latest_version=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[0].tag_name')
+          echo "::set-output name=latest_version::${latest_version}"
 
-      - name: Test Build Gems on the Latest Three Logstash Release Versions
+      - name: Calculate previous version
+        id: previous_version
         run: |
-          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
+          latest_version="${{ steps.latest_version.outputs.latest_version }}"
+          previous_version=$(echo $latest_version | awk -F'.' '{printf "%d.%d.%d", $1-1, $2, $3}')
+          echo "::set-output name=previous_version::${previous_version}"
+
+      - name: Set versions output
+        id: set_versions
+        run: |
+          latest_version="${{ steps.latest_version.outputs.latest_version }}"
+          previous_version="${{ steps.previous_version.outputs.previous_version }}"
+          echo "::set-output name=versions::${latest_version} ${previous_version}"
+
+      - name: Test Build Gems on the Latest Two Logstash Release Versions
+        run: |
+          versions=($(echo "${{ steps.set_versions.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
           
             echo "Current Logstash version: $version"
@@ -52,7 +66,7 @@ jobs:
             ./gradlew clean
             ./gradlew assemble
             cd ../..
-      
+          
             ./gradlew clean
           
             cd ydb_input_plugin
