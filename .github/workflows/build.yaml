@@ -44,6 +44,7 @@ jobs:
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
             tar -xzf "logstash/$version.tar.gz" --directory "logstash"
             logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
+          
             echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
             echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
