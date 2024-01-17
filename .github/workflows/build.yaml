@@ -26,25 +26,18 @@ jobs:
       - name: Create Logstash directory
         run: mkdir logstash
 
-      - name: Get latest Logstash version
-        id: latest_version
+      - name: Get latest Logstash versions
+        id: version
         run: |
-          latest_version=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[0].tag_name')
-          echo "::set-output name=latest_version::${latest_version}"
-
-      - name: Calculate previous version
-        id: previous_version
-        run: |
-          latest_version="${{ steps.latest_version.outputs.latest_version }}"
-          previous_version=$(echo $latest_version | awk -F'.' '{printf "%d.%d.%d", $1-1, $2, $3}')
-          echo "::set-output name=previous_version::${previous_version}"
-
-      - name: Set versions output
-        id: set_versions
-        run: |
-          latest_version="${{ steps.latest_version.outputs.latest_version }}"
-          previous_version="${{ steps.previous_version.outputs.previous_version }}"
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '[.[].tag_name] | sort_by(.) | reverse | .[:2] | .[]'))
+          latest_version="${versions[0]}"
+          previous_version="${versions[1]}"
           echo "::set-output name=versions::${latest_version} ${previous_version}"
+
+      - name: Show Logstash versions matrix
+        run: |
+          echo "Logstash versions matrix: ${{ steps.version.outputs.versions }}"
+      
 
       - name: Test Build Gems on the Latest Two Logstash Release Versions
         run: |
