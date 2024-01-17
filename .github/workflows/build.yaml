@@ -23,6 +23,8 @@ jobs:
         run: |
           echo "Current directory: $(pwd)"
           echo "Contents of the directory: $(ls -la)"
+          cd ydb_input_plugin
+          echo "Current directory: $(pwd)"
 
       - name: Create Logstash directory
         run: mkdir logstash
