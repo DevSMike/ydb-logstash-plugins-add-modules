@@ -25,7 +25,7 @@ jobs:
       - name: Get Logstash versions
         id: versions
         run: |
-          versions=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name')
+          versions=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3)
           echo "::set-output name=versions::${versions}"
 
       - name: Iterate over Logstash versions
@@ -50,8 +50,8 @@ jobs:
             echo "Latest Logstash version: $latest_version"
 
             # Download Logstash source code for the specified version
-            curl -L -o logstash_$version.zip https://github.com/elastic/logstash/archive/$version.zip
-            unzip -q logstash_$version.zip
+            curl -L -o logstash_$version.tar.gz https://github.com/elastic/logstash/archive/$version.tar.gz
+            tar -xzf logstash_$version.tar.gz
             mv logstash-$version logstash
 
             # Generate logstash-core.jar
@@ -70,7 +70,7 @@ jobs:
             # Добавьте здесь шаги для тестирования, если необходимо
 
             # Clean up
-            rm -rf logstash_$version.zip logstash
+            rm -rf logstash_$version.tar.gz logstash
           done
         env:
           latest_version: ${{ steps.build_steps.outputs.version }}
