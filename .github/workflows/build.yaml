@@ -14,41 +14,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.0.0
 
-      - name: Get Logstash versions from releases
+      - name: Check project structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Contents of the directory: $(ls -la)"
+
+      - name: Create Logstash directory
+        run: mkdir logstash
+
+      - name: Get latest Logstash versions
+        id: version
         run: |
           versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
           echo "::set-output name=versions::${versions[@]}"
-    
 
-      - name: Build and Test for each Logstash version
+      - name: Download and Extract Logstash versions
         run: |
-          versions=($LOGSTASH_VERSIONS)
+          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
+          
             echo "Current Logstash version: $version"
+            # Очистка директории перед каждой итерацией
+            rm -rf "logstash/$version"
 
-            wget "https://github.com/elastic/logstash/archive/refs/tags/${version}.tar.gz"
-            tar -xzf "${version}.tar.gz"
+            wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
+            tar -xzf "logstash/$version.tar.gz" --directory "logstash"
+            logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
+            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+            echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
 
-            cd "logstash-${version}"
+            cd logstash/$logstash_dir
+            ./gradlew clean
             ./gradlew assemble
             cd ..
 
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-${version}/logstash-core" >> $GITHUB_ENV
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-${version}/logstash-core" > gradle.properties
-
-            cd "ydb_input_plugin"
+            # Добавление команд для тестирования конкретной версии
+            cd ydb_input_plugin
             ../gradlew gem
             cd ..
-
-            cd "ydb_output_plugin"
+            cd ydb_output_plugin
             ../gradlew gem
             cd ..
           done
