@@ -24,10 +24,9 @@ jobs:
 
       - name: Get Logstash versions from releases
         run: |
-          versions=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -Vr | head -n 3)
-          echo "LOGSTASH_VERSIONS=$versions" >> $GITHUB_ENV
-          echo "Logstash versions: $versions"
-      
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
+          echo "::set-output name=versions::${versions[@]}"
+    
 
       - name: Build and Test for each Logstash version
         run: |
