@@ -22,55 +22,32 @@ jobs:
         with:
           ruby-version: 3.0.0
 
-      - name: Get Logstash versions
-        id: versions
+      - name: Get Logstash versions from releases
         run: |
-          versions=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3)
-          echo "::set-output name=versions::${versions}"
+          versions=$(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -Vr | head -n 3)
+          echo "LOGSTASH_VERSIONS=$versions" >> $GITHUB_ENV
 
-      - name: Iterate over Logstash versions
-        id: build_steps
+      - name: Build and Test for each Logstash version
         run: |
-          versions=(${{ steps.versions.outputs.versions }})
+          versions=($LOGSTASH_VERSIONS)
           for version in "${versions[@]}"; do
-            echo "::set-output name=version::$version"
-            echo "::set-output name=version_underscored::$(echo $version | tr '.' '_')"
-          done
+            echo "Current Logstash version: $version"
 
-      - name: Set LOGSTASH_CORE_PATH and Build Gems
-        run: |
-          latest_version=$(echo "${{ steps.versions.outputs.versions }}" | head -n 1)
-          versions=(${{ steps.build_steps.outputs.version_underscored }})
+            wget "https://github.com/elastic/logstash/archive/refs/tags/${version}.tar.gz"
+            tar -xzf "${version}.tar.gz"
 
-          for version in "${versions[@]}"; do
-            echo "Processing Logstash version: $version"
-          
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
-            echo "Latest Logstash version: $latest_version"
-
-            # Download Logstash source code for the specified version
-            curl -L -o logstash_$version.tar.gz https://github.com/elastic/logstash/archive/$version.tar.gz
-            tar -xzf logstash_$version.tar.gz
-            mv logstash-$version logstash
-
-            # Generate logstash-core.jar
-            cd logstash
+            cd "logstash-${version}"
             ./gradlew assemble
             cd ..
 
-            # Build Gems in ydb_input_plugin
-            cd ydb_input_plugin
-            ../gradlew gem
-            # Добавьте здесь шаги для тестирования, если необходимо
+            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-${version}/logstash-core" >> $GITHUB_ENV
+            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash-${version}/logstash-core" > gradle.properties
 
-            # Build Gems in ydb_output_plugin
-            cd ../ydb_output_plugin
+            cd "ydb_input_plugin"
             ../gradlew gem
-            # Добавьте здесь шаги для тестирования, если необходимо
+            cd ..
 
-            # Clean up
-            rm -rf logstash_$version.tar.gz logstash
+            cd "ydb_output_plugin"
+            ../gradlew gem
+            cd ..
           done
-        env:
-          latest_version: ${{ steps.build_steps.outputs.version }}
