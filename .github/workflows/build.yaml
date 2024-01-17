@@ -32,13 +32,13 @@ jobs:
           versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
           echo "::set-output name=versions::${versions[@]}"
 
-      - name: Download and Extract Logstash versions
+      - name: Test Build Gems on the Latest Three Logstash Release Versions
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
           for version in "${versions[@]}"; do
           
             echo "Current Logstash version: $version"
-            # Очистка директории перед каждой итерацией
+          
             rm -rf "logstash/$version"
 
             wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
@@ -51,9 +51,9 @@ jobs:
             ./gradlew clean
             ./gradlew assemble
             cd ../..
-           echo "Current directory: $(pwd)"
-
-            # Добавление команд для тестирования конкретной версии
+      
+            ./gradlew clean
+          
             cd ydb_input_plugin
             ../gradlew gem
             cd ..
