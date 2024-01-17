@@ -7,7 +7,7 @@ on:
       - develop
       - release*
   pull_request:
-    type: [opened, reopened, edited]
+    types: [opened, reopened, edited]
 
 jobs:
   build_and_test:
@@ -29,43 +29,43 @@ jobs:
       - name: Get latest Logstash versions
         id: version
         run: |
-          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '[.[].tag_name] | sort_by(.) | reverse | .[:2] | .[]'))
-          latest_version="${versions[0]}"
-          previous_version="${versions[1]}"
-          echo "::set-output name=versions::${latest_version} ${previous_version}"
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
+          echo "::set-output name=versions::${versions[@]}"
 
-      - name: Show Logstash versions matrix
+      - name: Test Build Gems on Latest Logstash Release Versions
         run: |
-          echo "Logstash versions matrix: ${{ steps.version.outputs.versions }}"
-      
+          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
 
-      - name: Test Build Gems on the Latest Two Logstash Release Versions
-        run: |
-          versions=($(echo "${{ steps.set_versions.outputs.versions }}" | tr ' ' '\n'))
-          for version in "${versions[@]}"; do
-          
-            echo "Current Logstash version: $version"
-          
-            rm -rf "logstash/$version"
+          for major_version in $(printf "%s\n" "${versions[@]}" | cut -d. -f1 | sort -ru); do
+            versions_for_major=($(printf "%s\n" "${versions[@]}" | grep "^$major_version\." | sort -rV))
 
-            wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
-            tar -xzf "logstash/$version.tar.gz" --directory "logstash"
-            logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
-          
-            echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
-            echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
+            latest_version="${versions_for_major[0]}"
+            previous_version=$(printf "%s\n" "${versions_for_major[@]}" | grep -A 1 "$latest_version" | tail -n 1)
 
-            cd logstash/$logstash_dir
-            ./gradlew clean
-            ./gradlew assemble
-            cd ../..
-          
-            ./gradlew clean
-          
-            cd ydb_input_plugin
-            ../gradlew gem
-            cd ..
-            cd ydb_output_plugin
-            ../gradlew gem
-            cd ..
+            echo "Building for Logstash versions: $latest_version and $previous_version"
+
+            for version in "$latest_version" "$previous_version"; do
+              rm -rf "logstash/$version"
+
+              wget -P "logstash" "https://github.com/elastic/logstash/archive/$version.tar.gz"
+              tar -xzf "logstash/$version.tar.gz" --directory "logstash"
+              logstash_dir=$(tar -tzf "logstash/$version.tar.gz" | head -n 1 | cut -f1 -d"/")
+
+              echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+              echo "LOGSTASH_VERSION=$version" >> $GITHUB_ENV
+
+              cd logstash/$logstash_dir
+              ./gradlew clean
+              ./gradlew assemble
+              cd ../..
+
+              ./gradlew clean
+
+              cd ydb_input_plugin
+              ../gradlew gem
+              cd ..
+              cd ydb_output_plugin
+              ../gradlew gem
+              cd ..
+            done
           done
