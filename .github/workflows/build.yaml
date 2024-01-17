@@ -74,10 +74,3 @@ jobs:
           done
         env:
           latest_version: ${{ steps.build_steps.outputs.version }}
-
-      - name: Display Logstash versions and latest version
-        run: |
-          versions=(${{ steps.versions.outputs.versions }})
-          latest_version=${{ steps.build_steps.outputs.version }}
-          echo "Logstash versions: ${versions[@]}"
-          echo "Latest Logstash version: $latest_version"
