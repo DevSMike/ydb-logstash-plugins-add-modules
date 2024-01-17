@@ -29,7 +29,7 @@ jobs:
       - name: Get latest Logstash versions
         id: version
         run: |
-          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name' | head -n 3))
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name'))
           echo "::set-output name=versions::${versions[@]}"
 
       - name: Test Build Gems on Latest Logstash Release Versions
