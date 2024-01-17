@@ -86,8 +86,8 @@ subprojects {
             file.delete()
         }
         delete "${projectDir}/VERSION"
-        new FileNameFinder().getFileNames(projectDir.toString(), pluginInfo.pluginFullName() + "-?.?.?.gem").each { filename ->
-            delete filename
+        fileTree(dir: projectDir, includes: ["*.gem"]).each { file ->
+            file.delete()
         }
     }
     //after clean if get problems: TASKKILL /F /IM java.exe
