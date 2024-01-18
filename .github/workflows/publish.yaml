@@ -8,8 +8,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -18,40 +18,56 @@ jobs:
         with:
           ruby-version: 3.0.0
 
-      - name: Clone Logstash repository
-        run: git clone https://github.com/elastic/logstash
+      - name: Create Logstash directory
+        run: mkdir logstash
 
-      - name: Set LOGSTASH_CORE_PATH
+      - name: Get latest Logstash versions
+        id: version
         run: |
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" >> $GITHUB_ENV
-          echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/logstash-core" > gradle.properties
+          versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name'))
+          echo "::set-output name=versions::${versions[@]}"
 
-      - name: Generate logstash-core.jar
+      - name: Test Build Gems on Latest Logstash Release Versions
         run: |
-          cd logstash
-          ./gradlew assemble
+          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
 
-      - name: Build Gems in ydb_input_plugin
-        run: |
-          cd ydb_input_plugin
-          ../gradlew gem
+          # Находим первую цифру последней версии
+          first_digit=$(echo "${versions[0]}" | grep -oE '[0-9]+' | head -c 1)
+          # Находим последний релиз с этой цифрой
+          latest_version=$(printf "%s\n" "${versions[@]}" | grep "^v$first_digit\." | sort -rV | head -n 1)
 
-      - name: Build Gems in ydb_output_plugin
-        run: |
-          cd ydb_output_plugin
-          ../gradlew gem
+          # Находим первую цифру предшествующей версии
+          previous_first_digit=$((first_digit - 1))
+          # Находим последний релиз с предшествующей цифрой
+          previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
+
+          echo "Building for Logstash versions: $latest_version and $previous_version"
+
+          for current_version in "$latest_version" "$previous_version"; do
+              rm -rf "logstash/$current_version"
+
+              wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
+              tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
+              logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
+
+              echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+              echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
+
+              cd logstash/$logstash_dir
+              ./gradlew clean
+              ./gradlew assemble
           
-      - name: Checkout repository
-        uses: actions/checkout@v2
+              cd ../..
 
-      - name: Set up Ruby for Release
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.0.0
+              ./gradlew clean
 
-      - name: Create GitHub Release
-        run: |
-          version=$(cat ydb_input_plugin/VERSION)  
-          gh release create "v${version}" -t "Release v${version}" ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+              ./gradlew gem
+
+              # Создание GitHub Release с учетом версии Logstash
+              version=$(cat ydb_input_plugin/VERSION)
+              gh release create "v${version}" -t "Release v${version}" \
+                -n "Built with Logstash ${current_version}" \
+                ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
