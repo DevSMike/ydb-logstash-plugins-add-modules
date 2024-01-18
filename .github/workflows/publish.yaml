@@ -9,7 +9,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -69,9 +68,8 @@ jobs:
               # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
                 # Релиз существует, выполнить upload
-                gh release upload "$tag" \
-                  -n "Built with Logstash ${current_version}" \
-                  ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+                gh release upload "$tag" --clobber \
+                  "Built with Logstash ${current_version}"=ydb_input_plugin/*.gem "Built with Logstash ${current_version}"=ydb_output_plugin/*.gem
               else
                 # Релиз не существует, выполнить create
                 gh release create "$tag" -t "Release $tag" \
