@@ -68,9 +68,8 @@ jobs:
               # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
                 # Релиз существует, выполнить upload
-                gh release upload "$tag" --clobber \
-                  -n "Built with Logstash ${current_version}" \
-                  ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+                gh release upload "$tag" ydb_input_plugin/*.gem ydb_output_plugin/*.gem --clobber \
+                  -n "Built with Logstash ${current_version}"
               else
                 # Релиз не существует, выполнить create
                 gh release create "$tag" -t "Release $tag" \
