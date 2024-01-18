@@ -67,8 +67,9 @@ jobs:
           
               # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
-                 # Добавляем запись в релиз
-                gh release edit "$tag" --append -n "New content for Logstash ${current_version}" \
+                # Релиз существует, выполнить upload
+                gh release upload "$tag" --clobber \
+                  -n "Built with Logstash ${current_version}" \
                   ydb_input_plugin/*.gem ydb_output_plugin/*.gem
               else
                 # Релиз не существует, выполнить create
@@ -76,8 +77,6 @@ jobs:
                   -n "Built with Logstash ${current_version}" \
                   ydb_input_plugin/*.gem ydb_output_plugin/*.gem
               fi
-          
-             
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
