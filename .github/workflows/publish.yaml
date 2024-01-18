@@ -27,47 +27,43 @@ jobs:
           versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name'))
           echo "::set-output name=versions::${versions[@]}"
 
-      - name: Test Build Gems on Latest Logstash Release Versions
+      - name:  Create or Update GitHub Release
         run: |
-          versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
-
-          # Находим первую цифру последней версии
-          first_digit=$(echo "${versions[0]}" | grep -oE '[0-9]+' | head -c 1)
-          # Находим последний релиз с этой цифрой
-          latest_version=$(printf "%s\n" "${versions[@]}" | grep "^v$first_digit\." | sort -rV | head -n 1)
-
-          # Находим первую цифру предшествующей версии
-          previous_first_digit=$((first_digit - 1))
-          # Находим последний релиз с предшествующей цифрой
-          previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
-
-          echo "Building for Logstash versions: $latest_version and $previous_version"
-
-          for current_version in "$latest_version" "$previous_version"; do
-              rm -rf "logstash/$current_version"
-
-              wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
-              tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
-              logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
-
-              echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
-              echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
-
-              cd logstash/$logstash_dir
-              ./gradlew clean
-              ./gradlew assemble
-          
-              cd ../..
-
-              ./gradlew clean
-
-              ./gradlew gem
-
-              # Создание GitHub Release с учетом версии Logstash
-              version=$(cat ydb_input_plugin/VERSION)
-              gh release create "v${version}" -t "Release v${version}" \
-                -n "Built with Logstash ${current_version}" \
-                ydb_input_plugin/*.gem ydb_output_plugin/*.gem
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            for current_version in "$latest_version" "$previous_version"; do
+                rm -rf "logstash/$current_version"
+            
+                wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
+                tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
+                logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
+            
+                echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
+                echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
+            
+                cd logstash/$logstash_dir
+                ./gradlew clean
+                ./gradlew assemble
+            
+                cd ../..
+            
+                ./gradlew clean
+            
+                ./gradlew gem
+            
+                # Получение тега, который мы запушили
+                tag=$(git describe --tags --abbrev=0)
+            
+                # Проверка существования релиза
+                if gh release view "$tag" &> /dev/null; then
+                  # Релиз существует, выполнить upload
+                  gh release upload "$tag" \
+                    -n "Built with Logstash ${current_version}" \
+                    ydb_input_plugin/*.gem ydb_output_plugin/*.gem \
+                else
+                  # Релиз не существует, выполнить create
+                  gh release create "$tag" -t "Release $tag" \
+                    -n "Built with Logstash ${current_version}" \
+                    ydb_input_plugin/*.gem ydb_output_plugin/*.gem \
+                fi
+            done
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
