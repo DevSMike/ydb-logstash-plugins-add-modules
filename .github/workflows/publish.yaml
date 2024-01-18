@@ -68,13 +68,23 @@ jobs:
               # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
                 # Релиз существует, выполнить upload
-                gh release upload "$tag" ydb_input_plugin/*.gem ydb_output_plugin/*.gem --clobber \
+
+                # Переименование gem файлов с добавлением версии Logstash
+                mv ydb_input_plugin/*.gem "ydb_input_plugin/logstash-${current_version}_input_plugin.gem"
+                mv ydb_output_plugin/*.gem "ydb_output_plugin/logstash-${current_version}_output_plugin.gem"
+
+                gh release upload "$tag" "ydb_input_plugin/logstash-${current_version}_input_plugin.gem" "ydb_output_plugin/logstash-${current_version}_output_plugin.gem" --clobber \
                   -n "Built with Logstash ${current_version}"
               else
                 # Релиз не существует, выполнить create
+
+                # Переименование gem файлов с добавлением версии Logstash
+                mv ydb_input_plugin/*.gem "ydb_input_plugin/logstash-${current_version}_input_plugin.gem"
+                mv ydb_output_plugin/*.gem "ydb_output_plugin/logstash-${current_version}_output_plugin.gem"
+
                 gh release create "$tag" -t "Release $tag" \
                   -n "Built with Logstash ${current_version}" \
-                  ydb_input_plugin/*.gem ydb_output_plugin/*.gem
+                  ydb_input_plugin/logstash-${current_version}_input_plugin.gem ydb_output_plugin/logstash-${current_version}_output_plugin.gem
               fi
           done
         env:
