@@ -27,7 +27,7 @@ jobs:
           versions=($(curl -s https://api.github.com/repos/elastic/logstash/releases | jq -r '.[].tag_name'))
           echo "::set-output name=versions::${versions[@]}"
 
-      - name: Calculate Logstash versions
+      - name: Create or Update GitHub Release
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
 
@@ -42,9 +42,7 @@ jobs:
           previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
 
           echo "Building for Logstash versions: $latest_version and $previous_version"
-
-      - name: Create or Update GitHub Release
-        run: |
+          
           for current_version in "$latest_version" "$previous_version"; do
               rm -rf "logstash/$current_version"
           
