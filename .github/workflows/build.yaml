@@ -38,13 +38,11 @@ jobs:
 
           # Находим первую цифру последней версии
           first_digit=$(echo "${versions[0]}" | grep -oE '[0-9]+' | head -c 1)
-
           # Находим последний релиз с этой цифрой
           latest_version=$(printf "%s\n" "${versions[@]}" | grep "^v$first_digit\." | sort -rV | head -n 1)
 
           # Находим первую цифру предшествующей версии
           previous_first_digit=$((first_digit - 1))
-
           # Находим последний релиз с предшествующей цифрой
           previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
 
@@ -63,14 +61,9 @@ jobs:
               cd logstash/$logstash_dir
               ./gradlew clean
               ./gradlew assemble
+          
               cd ../..
 
               ./gradlew clean
-
-              cd ydb_input_plugin
-              ../gradlew gem
-              cd ..
-              cd ydb_output_plugin
-              ../gradlew gem
-              cd ..
+              ./gradlew gem
           done
