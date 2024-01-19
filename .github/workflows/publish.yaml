@@ -39,39 +39,50 @@ jobs:
 
           for current_version in "$latest_version" "$previous_version"; do
               rm -rf "logstash/$current_version"
+          
               wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
               tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
               logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
-
+          
               echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
               echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
-
+          
               cd logstash/$logstash_dir
               ./gradlew clean
               ./gradlew assemble
-
+          
               cd ../..
-
+          
               ./gradlew clean
-
+          
               ./gradlew gem
 
+              # Получение тега, который мы запушили
               tag=$(git describe --tags --abbrev=0)
+          
+              # Создание массива с путями ко всем .gem файлам
+              gem_files=($(find . -name "*.gem"))
+          
+              for gem_file in "${gem_files[@]}"; do
+                  # Извлечение имени файла без расширения
+                  file_name=$(basename -- "$gem_file")
+                  extension="${file_name##*.}"
+                  file_name="${file_name%.*}"
+          
+                  # Переименование gem файла с добавлением версии Logstash
+                  new_file_name="${file_name}-${current_version}.${extension}"
+                  mv "$gem_file" "${new_file_name}"
+              done
 
+              # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
-                for plugin_dir in $(find . -type d -name '*_plugin'); do
-                  mv "$plugin_dir"/*.gem "$plugin_dir/$(basename -- "$plugin_dir")_${current_version}.gem"
-                done
-
-                gh release upload "$tag" */*.gem --clobber
+                # Релиз существует, выполнить upload
+                gh release upload "$tag" "${gem_files[@]}" --clobber
               else
-                for plugin_dir in $(find . -type d -name '*_plugin'); do
-                  mv "$plugin_dir"/*.gem "$plugin_dir/$(basename -- "$plugin_dir")_${current_version}.gem"
-                done
-
+                # Релиз не существует, выполнить create
                 gh release create "$tag" -t "Release $tag" \
                   -n "Built with Logstash Stable Versions" \
-                  */*.gem
+                  "${gem_files[@]}"
               fi
           done
         env:
