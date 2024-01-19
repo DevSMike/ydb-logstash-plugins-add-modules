@@ -30,19 +30,7 @@ jobs:
         run: |
           versions=($(echo "${{ steps.version.outputs.versions }}" | tr ' ' '\n'))
 
-          # Находим первую цифру последней версии
-          first_digit=$(echo "${versions[0]}" | grep -oE '[0-9]+' | head -c 1)
-          # Находим последний релиз с этой цифрой
-          latest_version=$(printf "%s\n" "${versions[@]}" | grep "^v$first_digit\." | sort -rV | head -n 1)
-
-          # Находим первую цифру предшествующей версии
-          previous_first_digit=$((first_digit - 1))
-          # Находим последний релиз с предшествующей цифрой
-          previous_version=$(printf "%s\n" "${versions[@]}" | grep "^v$previous_first_digit\." | sort -rV | head -n 1)
-
-          echo "Building for Logstash versions: $latest_version and $previous_version"
-          
-          for current_version in "$latest_version" "$previous_version"; do
+          for current_version in "${versions[@]}"; do
               rm -rf "logstash/$current_version"
           
               wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
@@ -65,26 +53,27 @@ jobs:
               # Получение тега, который мы запушили
               tag=$(git describe --tags --abbrev=0)
           
-              # Проверка существования релиза
+              # Создание или обновление релиза
               if gh release view "$tag" &> /dev/null; then
                 # Релиз существует, выполнить upload
 
-                # Переименование gem файлов с добавлением версии Logstash
-                mv ydb_input_plugin/*.gem "ydb_input_plugin/logstash-${current_version}_input_plugin.gem"
-                mv ydb_output_plugin/*.gem "ydb_output_plugin/logstash-${current_version}_output_plugin.gem"
+                for gem_file in $(find . -name '*.gem'); do
+                  # Переименование gem файлов с добавлением версии Logstash
+                  mv "$gem_file" "${gem_file%.*}_${current_version}.gem"
+                done
 
-                gh release upload "$tag" "ydb_input_plugin/logstash-${current_version}_input_plugin.gem" "ydb_output_plugin/logstash-${current_version}_output_plugin.gem" --clobber \
-                
+                gh release upload "$tag" *.gem --clobber
               else
                 # Релиз не существует, выполнить create
 
-                # Переименование gem файлов с добавлением версии Logstash
-                mv ydb_input_plugin/*.gem "ydb_input_plugin/logstash-${current_version}_input_plugin.gem"
-                mv ydb_output_plugin/*.gem "ydb_output_plugin/logstash-${current_version}_output_plugin.gem"
+                for gem_file in $(find . -name '*.gem'); do
+                  # Переименование gem файлов с добавлением версии Logstash
+                  mv "$gem_file" "${gem_file%.*}_${current_version}.gem"
+                done
 
                 gh release create "$tag" -t "Release $tag" \
                   -n "Built with Logstash Stable Versions" \
-                  ydb_input_plugin/logstash-${current_version}_input_plugin.gem ydb_output_plugin/logstash-${current_version}_output_plugin.gem
+                  *.gem
               fi
           done
         env:
