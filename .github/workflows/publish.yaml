@@ -46,7 +46,7 @@ jobs:
               echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
               echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
 
-              cd "logstash/$logstash_dir"
+              cd logstash/$logstash_dir
               ./gradlew clean
               ./gradlew assemble
 
@@ -57,16 +57,16 @@ jobs:
               ./gradlew gem
 
               tag=$(git describe --tags --abbrev=0)
-          
+
               if gh release view "$tag" &> /dev/null; then
-                for gem_file in $(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'); do
-                  mv "$gem_file" "$(basename -- "$gem_file")_${current_version}.gem"
+                for plugin_file in $(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'); do
+                  mv "$plugin_file" "$(dirname "$plugin_file")/$(basename -- "$plugin_file")_${current_version}.gem"
                 done
 
                 gh release upload "$tag" */*.gem --clobber
               else
-                for gem_file in $(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'); do
-                  mv "$gem_file" "$(basename -- "$gem_file")_${current_version}.gem"
+                for plugin_file in $(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'); do
+                  mv "$plugin_file" "$(dirname "$plugin_file")/$(basename -- "$plugin_file")_${current_version}.gem"
                 done
 
                 gh release create "$tag" -t "Release $tag" \
