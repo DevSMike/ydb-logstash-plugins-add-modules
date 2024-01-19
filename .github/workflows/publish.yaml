@@ -59,6 +59,7 @@ jobs:
 
               tag=$(git describe --tags --abbrev=0)
 
+              # Создание массива с путями ко всем .gem файлам (исключая папки vendor и logstash)
               gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'))
 
               echo "Contents of gem_files array:"
@@ -66,28 +67,33 @@ jobs:
                 echo "$file"
               done
 
+              # Создание временного массива для переименованных файлов
+              renamed_files=()
+
               for gem_file in "${gem_files[@]}"; do
                   file_name=$(basename -- "$gem_file")
                   extension="${file_name##*.}"
                   file_name="${file_name%.*}"
 
-                  if [[ ! "$file_name" =~ "$tag" ]]; then
-                    new_file_name="${file_name}-${current_version}.${extension}"
+                  new_file_name="${file_name}-${current_version}.${extension}"
 
-                    mv "$gem_file" "${new_file_name}"
-                    echo "Renamed $gem_file to ${new_file_name}"
+                  mv "$gem_file" "${new_file_name}"
+                  echo "Renamed $gem_file to ${new_file_name}"
 
-                    if gh release view "$tag" &> /dev/null; then
-                      gh release upload "$tag" "${new_file_name}" --clobber
-                    else
-                      gh release create "$tag" -t "Release $tag" \
-                        -n "Built with Logstash Stable Versions" \
-                        "${new_file_name}"
-                    fi
-                  else
-                    echo "Skipping $gem_file because it already contains the tag in the name"
-                  fi
+                  # Добавление переименованного файла в временный массив
+                  renamed_files+=("${new_file_name}")
               done
+
+              if gh release view "$tag" &> /dev/null; then
+                gh release upload "$tag" "${renamed_files[@]}" --clobber
+              else
+                gh release create "$tag" -t "Release $tag" \
+                  -n "Built with Logstash Stable Versions" \
+                  "${renamed_files[@]}"
+              fi
+
+              # Очистка массива gem_files
+              gem_files=()
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
