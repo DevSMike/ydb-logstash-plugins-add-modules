@@ -39,36 +39,36 @@ jobs:
 
           for current_version in "$latest_version" "$previous_version"; do
               rm -rf "logstash/$current_version"
-          
+
               wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
               tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
               logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
-          
+
               echo "LOGSTASH_CORE_PATH=$(pwd)/logstash/$logstash_dir/logstash-core" > gradle.properties
               echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
-          
+
               cd logstash/$logstash_dir
               ./gradlew clean
               ./gradlew assemble
-          
+
               cd ../..
-          
+
               ./gradlew clean
-          
+
               ./gradlew gem
 
               # Получение тега, который мы запушили
               tag=$(git describe --tags --abbrev=0)
-          
-              # Создание массива с путями ко всем .gem файлам
-              gem_files=($(find . -name "*.gem"))
-          
+
+              # Создание массива с путями ко всем .gem файлам (исключая папку vendor)
+              gem_files=($(find . -name "*.gem" ! -path "*/vendor/*"))
+
               for gem_file in "${gem_files[@]}"; do
                   # Извлечение имени файла без расширения
                   file_name=$(basename -- "$gem_file")
                   extension="${file_name##*.}"
                   file_name="${file_name%.*}"
-          
+
                   # Переименование gem файла с добавлением версии Logstash
                   new_file_name="${file_name}-${current_version}.${extension}"
                   mv "$gem_file" "${new_file_name}"
