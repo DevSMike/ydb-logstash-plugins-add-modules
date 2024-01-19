@@ -57,43 +57,29 @@ jobs:
 
               ./gradlew gem
 
-              # Получение тега, который мы запушили
               tag=$(git describe --tags --abbrev=0)
 
-              # Создание массива с путями ко всем .gem файлам (исключая папки vendor и logstash)
               gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'))
 
-              # Отладочный вывод содержимого массива gem_files
               echo "Contents of gem_files array:"
               for file in "${gem_files[@]}"; do
                 echo "$file"
               done
 
-              # Переименование gem файлов с добавлением версии Logstash
               for gem_file in "${gem_files[@]}"; do
-                  # Извлечение имени файла без расширения
                   file_name=$(basename -- "$gem_file")
                   extension="${file_name##*.}"
                   file_name="${file_name%.*}"
 
-                  # Переименование gem файла с добавлением версии Logstash
                   new_file_name="${file_name}-${current_version}.${extension}"
 
-                  # Проверка, существует ли файл, прежде чем выполнять переименование
-                  if [ -e "$gem_file" ]; then
-                      mv "$gem_file" "${new_file_name}"
-                      echo "Renamed $gem_file to ${new_file_name}"
-                  else
-                      echo "File $gem_file not found."
-                  fi
+                  mv "$gem_file" "${new_file_name}"
+                  gem_files=("${gem_files[@]/$gem_file/$new_file_name}")
               done
 
-              # Проверка существования релиза
               if gh release view "$tag" &> /dev/null; then
-                # Релиз существует, выполнить upload
                 gh release upload "$tag" "${gem_files[@]}" --clobber
               else
-                # Релиз не существует, выполнить create
                 gh release create "$tag" -t "Release $tag" \
                   -n "Built with Logstash Stable Versions" \
                   "${gem_files[@]}"
