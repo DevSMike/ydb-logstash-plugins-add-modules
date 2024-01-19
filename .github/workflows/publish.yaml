@@ -39,7 +39,6 @@ jobs:
 
           for current_version in "$latest_version" "$previous_version"; do
               rm -rf "logstash/$current_version"
-
               wget -P "logstash" "https://github.com/elastic/logstash/archive/$current_version.tar.gz"
               tar -xzf "logstash/$current_version.tar.gz" --directory "logstash"
               logstash_dir=$(tar -tzf "logstash/$current_version.tar.gz" | head -n 1 | cut -f1 -d"/")
@@ -48,34 +47,32 @@ jobs:
               echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
 
               cd logstash/$logstash_dir
-              ./gradlew clean assemble
+              ./gradlew clean
+              ./gradlew assemble
+
               cd ../..
 
-              ./gradlew clean gem
+              ./gradlew clean
+
+              ./gradlew gem
 
               tag=$(git describe --tags --abbrev=0)
 
-              gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'))
-              gem_files=($(echo "${gem_files[@]}" | grep -vE "v[0-9]+\.[0-9]+\.[0-9]+"))
+              if gh release view "$tag" &> /dev/null; then
+                for plugin_dir in $(find . -type d -name '*_plugin'); do
+                  mv "$plugin_dir"/*.gem "$plugin_dir/$(basename -- "$plugin_dir")_${current_version}.gem"
+                done
 
-              for gem_file in "${gem_files[@]}"; do
-                  file_name=$(basename -- "$gem_file")
-                  extension="${file_name##*.}"
-                  file_name="${file_name%.*}"
+                gh release upload "$tag" */*.gem --clobber
+              else
+                for plugin_dir in $(find . -type d -name '*_plugin'); do
+                  mv "$plugin_dir"/*.gem "$plugin_dir/$(basename -- "$plugin_dir")_${current_version}.gem"
+                done
 
-                  new_file_name="${file_name}-${current_version}.${extension}"
-
-                  mv "$gem_file" "${new_file_name}"
-                  echo "Renamed $gem_file to ${new_file_name}"
-
-                  if gh release view "$tag" &> /dev/null; then
-                    gh release upload "$tag" "${new_file_name}" --clobber
-                  else
-                    gh release create "$tag" -t "Release $tag" \
-                      -n "Built with Logstash Stable Versions" \
-                      "${new_file_name}"
-                  fi
-              done
+                gh release create "$tag" -t "Release $tag" \
+                  -n "Built with Logstash Stable Versions" \
+                  */*.gem
+              fi
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
