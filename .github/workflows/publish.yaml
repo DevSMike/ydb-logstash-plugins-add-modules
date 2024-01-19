@@ -63,6 +63,12 @@ jobs:
               # Создание массива с путями ко всем .gem файлам (исключая папку vendor)
               gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*'))
 
+              # Отладочный вывод содержимого массива gem_files
+              echo "Contents of gem_files array:"
+              for file in "${gem_files[@]}"; do
+              echo "$file"
+              done
+          
               for gem_file in "${gem_files[@]}"; do
                   # Извлечение имени файла без расширения
                   file_name=$(basename -- "$gem_file")
