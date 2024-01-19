@@ -60,15 +60,16 @@ jobs:
               # Получение тега, который мы запушили
               tag=$(git describe --tags --abbrev=0)
 
-              # Создание массива с путями ко всем .gem файлам (исключая папку vendor)
-              gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*'))
+              # Создание массива с путями ко всем .gem файлам (исключая папки vendor и logstash)
+              gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'))
 
               # Отладочный вывод содержимого массива gem_files
               echo "Contents of gem_files array:"
               for file in "${gem_files[@]}"; do
-              echo "$file"
+                echo "$file"
               done
-          
+
+              # Переименование gem файлов с добавлением версии Logstash
               for gem_file in "${gem_files[@]}"; do
                   # Извлечение имени файла без расширения
                   file_name=$(basename -- "$gem_file")
@@ -77,7 +78,14 @@ jobs:
 
                   # Переименование gem файла с добавлением версии Logstash
                   new_file_name="${file_name}-${current_version}.${extension}"
-                  mv "$gem_file" "${new_file_name}"
+
+                  # Проверка, существует ли файл, прежде чем выполнять переименование
+                  if [ -e "$gem_file" ]; then
+                      mv "$gem_file" "${new_file_name}"
+                      echo "Renamed $gem_file to ${new_file_name}"
+                  else
+                      echo "File $gem_file not found."
+                  fi
               done
 
               # Проверка существования релиза
