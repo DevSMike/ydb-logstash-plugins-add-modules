@@ -61,7 +61,7 @@ jobs:
               tag=$(git describe --tags --abbrev=0)
 
               # Создание массива с путями ко всем .gem файлам (исключая папку vendor)
-              gem_files=($(find . -name "*.gem" ! -path "*/vendor/*"))
+              gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*')
 
               for gem_file in "${gem_files[@]}"; do
                   # Извлечение имени файла без расширения
