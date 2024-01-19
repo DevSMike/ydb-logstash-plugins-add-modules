@@ -84,6 +84,8 @@ jobs:
                   -n "Built with Logstash Stable Versions" \
                   "${gem_files[@]}"
               fi
+
+              gem_files=()
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
