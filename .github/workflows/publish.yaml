@@ -48,27 +48,15 @@ jobs:
               echo "LOGSTASH_VERSION=$current_version" >> $GITHUB_ENV
 
               cd logstash/$logstash_dir
-              ./gradlew clean
-              ./gradlew assemble
-
+              ./gradlew clean assemble
               cd ../..
 
-              ./gradlew clean
-
-              ./gradlew gem
+              ./gradlew clean gem
 
               tag=$(git describe --tags --abbrev=0)
 
-              # Создание массива с путями ко всем .gem файлам (исключая папки vendor и logstash)
               gem_files=($(find . -type f -name '*.gem' -not -path '*/vendor/*' -not -path '*/logstash/*'))
-
-              echo "Contents of gem_files array:"
-              for file in "${gem_files[@]}"; do
-                echo "$file"
-              done
-
-              # Создание временного массива для переименованных файлов
-              renamed_files=()
+              gem_files=($(echo "${gem_files[@]}" | grep -vE "v[0-9]+\.[0-9]+\.[0-9]+"))
 
               for gem_file in "${gem_files[@]}"; do
                   file_name=$(basename -- "$gem_file")
@@ -80,20 +68,14 @@ jobs:
                   mv "$gem_file" "${new_file_name}"
                   echo "Renamed $gem_file to ${new_file_name}"
 
-                  # Добавление переименованного файла в временный массив
-                  renamed_files+=("${new_file_name}")
+                  if gh release view "$tag" &> /dev/null; then
+                    gh release upload "$tag" "${new_file_name}" --clobber
+                  else
+                    gh release create "$tag" -t "Release $tag" \
+                      -n "Built with Logstash Stable Versions" \
+                      "${new_file_name}"
+                  fi
               done
-
-              if gh release view "$tag" &> /dev/null; then
-                gh release upload "$tag" "${renamed_files[@]}" --clobber
-              else
-                gh release create "$tag" -t "Release $tag" \
-                  -n "Built with Logstash Stable Versions" \
-                  "${renamed_files[@]}"
-              fi
-
-              # Очистка массива gem_files
-              gem_files=()
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
