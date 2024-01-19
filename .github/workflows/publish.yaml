@@ -71,21 +71,23 @@ jobs:
                   extension="${file_name##*.}"
                   file_name="${file_name%.*}"
 
-                  new_file_name="${file_name}-${current_version}.${extension}"
+                  if [[ ! "$file_name" =~ "$tag" ]]; then
+                    new_file_name="${file_name}-${current_version}.${extension}"
 
-                  mv "$gem_file" "${new_file_name}"
-                  gem_files=("${gem_files[@]/$gem_file/$new_file_name}")
+                    mv "$gem_file" "${new_file_name}"
+                    echo "Renamed $gem_file to ${new_file_name}"
+
+                    if gh release view "$tag" &> /dev/null; then
+                      gh release upload "$tag" "${new_file_name}" --clobber
+                    else
+                      gh release create "$tag" -t "Release $tag" \
+                        -n "Built with Logstash Stable Versions" \
+                        "${new_file_name}"
+                    fi
+                  else
+                    echo "Skipping $gem_file because it already contains the tag in the name"
+                  fi
               done
-
-              if gh release view "$tag" &> /dev/null; then
-                gh release upload "$tag" "${gem_files[@]}" --clobber
-              else
-                gh release create "$tag" -t "Release $tag" \
-                  -n "Built with Logstash Stable Versions" \
-                  "${gem_files[@]}"
-              fi
-
-              gem_files=()
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
